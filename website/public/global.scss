@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "../public/css/ant-custom.css";
+
+@layer base {
+  html,
+
+  body {
+    height: 100%;
+    display: block!important;
+    background-color: #fbfbfb;
+    @apply antialiased;
+  }
+
+  h1 {
+    @apply text-4xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h5 {
+    @apply text-3xl;
+  }
+
+  h6 {
+    @apply text-lg;
+  }
+ 
+  .container-custom {
+    @apply xl:w-9/12 w-full lg:px-5 px-3 mx-auto;
+  }
+
+  input[type="checkbox"]:focus {
+    @apply outline-none ring-transparent;
+  }
+
+  .placeholder-bold::placeholder {
+    @apply font-bold;
+  }
+
+  .formSubTitle {
+    @apply font-bold text-2xl mb-4 mt-10;
+  }
+
+  .formItems {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+}
+
+li .ant-menu-submenu-title .ant-menu-title-content {
+  padding: 0 18px;
+}
+.hiddenArrowInputNumber::-webkit-inner-spin-button,
+.hiddenArrowInputNumber::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
