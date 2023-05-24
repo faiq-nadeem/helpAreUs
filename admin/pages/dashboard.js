@@ -25,7 +25,7 @@ const CrmDashboard = () => {
       <Head>
         <title>Dashboard</title>
       </Head>
-      <div className="dashboardProfile">
+      {/* <div className="dashboardProfile">
         <Avatar
           size={180}
           src={IMG_URL + user.image}
@@ -34,13 +34,13 @@ const CrmDashboard = () => {
         />
         <h4>{user.name}</h4>
         <Clock />
-      </div>
+      </div> */}
       <div className="  mb-5 grid grid-cols-12">
         <Counts />
         <Divider />
-        <div className=" mt-5 col-span-12">
+        {/* <div className=" mt-5 col-span-12">
           <Orders />
-        </div>
+        </div> */}
       </div>
     </React.Fragment>
   );

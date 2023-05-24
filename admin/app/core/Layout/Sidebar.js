@@ -75,7 +75,7 @@ const Sidebar = () => {
       >
         {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </div>
-      <div className="logo">NextLY</div>
+      <div className="logo">Portal</div>
       <Menu
         theme="dark"
         mode="inline"
