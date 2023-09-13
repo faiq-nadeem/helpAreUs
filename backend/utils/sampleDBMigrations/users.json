@@ -1,0 +1,151 @@
+[
+	{
+		"email": "admin@example.com",
+		"firstName": "John",
+		"lastName": "Doe",
+		"phone": "123-456-7890",
+		"country": "USA",
+		"company": "AdminCorp",
+		"town": "SampleTown",
+		"address": "123 Admin St",
+		"city": "AdminCity",
+		"state": "CA",
+		"postalCode": "12345",
+		"website": "https://admincorp.com",
+		"bio": "I manage the platform.",
+		"password": "admin123",
+		"profileImage": "https://example.com/images/johndoe.jpg",
+		"photographer": null,
+		"socialMedia": {
+			"tikTok": null,
+			"instagram": "@admin_john",
+			"faceBook": "facebook.com/admin.john",
+			"twitter": "@admin_john",
+			"linkedin": "linkedin.com/in/admin_john",
+			"youTube": "youtube.com/admin_john"
+		},
+		"reviewPlatform": null,
+		"subscription": null,
+		"userRole": "admin",
+		"isActive": true,
+		"passwordReset": {
+			"count": 0,
+			"code": null,
+			"lastResetDate": null,
+			"expiresAt": null
+		},
+		"createdBy": "system",
+		"updatedBy": "system"
+	},
+	{
+		"email": "alice@example.com",
+		"firstName": "Alice",
+		"lastName": "Smith",
+		"phone": "987-654-3210",
+		"country": "USA",
+		"company": "PhotosByAlice",
+		"town": "PhotoTown",
+		"address": "456 Alice St",
+		"city": "PhotoCity",
+		"state": "NY",
+		"postalCode": "67890",
+		"website": "https://photosbyalice.com",
+		"bio": "Passionate about capturing moments.",
+		"password": "alice456",
+		"profileImage": "https://example.com/images/alicesmith.jpg",
+		"photographer": {
+			"categories": [
+				"weddings",
+				"portraits"
+			],
+			"equipment": "Canon EOS R5",
+			"rating": 4.5
+		},
+		"socialMedia": {
+			"tikTok": "@alice_shots",
+			"instagram": "@alice_shots",
+			"faceBook": "facebook.com/alice.shots",
+			"twitter": "@alice_shots",
+			"linkedin": "linkedin.com/in/alice_smith",
+			"youTube": "youtube.com/alice_shots"
+		},
+		"reviewPlatform": {
+			"google": "google.com/reviews/photosbyalice",
+			"facebook": "facebook.com/reviews/photosbyalice",
+			"yelp": "yelp.com/biz/photosbyalice",
+			"tripadvisor": null
+		},
+		"subscription": {
+			"subscriptionPlanID": "sub_001",
+			"duration": "monthly",
+			"activationDate": "2023-08-01T00:00:00Z",
+			"expiryDate": "2023-09-01T00:00:00Z",
+			"paymentSessionID": "ps_001",
+			"paymentType": "credit_card",
+			"paymentStatus": "paid",
+			"isActive": true
+		},
+		"userRole": "photographer",
+		"isActive": true,
+		"passwordReset": {
+			"count": 1,
+			"code": 123456,
+			"lastResetDate": "2023-08-01T00:00:00Z",
+			"expiresAt": "2023-08-02T00:00:00Z"
+		},
+		"createdBy": "admin@example.com",
+		"updatedBy": "admin@example.com"
+	},
+	{
+		"email": "eve@example.com",
+		"firstName": "Eve",
+		"lastName": "Clark",
+		"phone": "789-012-3456",
+		"country": "UK",
+		"company": "UserInc",
+		"town": "UserTown",
+		"address": "789 Eve St",
+		"city": "UserCity",
+		"state": "London",
+		"postalCode": "UK1234",
+		"website": "https://userinc.com",
+		"bio": "Just an average user enjoying the platform.",
+		"password": "eve789",
+		"profileImage": "https://example.com/images/eveclark.jpg",
+		"photographer": null,
+		"socialMedia": {
+			"tikTok": "@eve_clark",
+			"instagram": "@eve_clark",
+			"faceBook": "facebook.com/eve.clark",
+			"twitter": "@eve_clark",
+			"linkedin": "linkedin.com/in/eve_clark",
+			"youTube": "youtube.com/eve_clark"
+		},
+		"reviewPlatform": {
+			"google": null,
+			"facebook": "facebook.com/reviews/eveclark",
+			"yelp": null,
+			"tripadvisor": null
+		},
+		"subscription": {
+			"subscriptionPlanID": "sub_005",
+			"duration": "monthly",
+			"activationDate": "2023-08-15T00:00:00Z",
+			"expiryDate": "2023-09-15T00:00:00Z",
+			"paymentSessionID": "ps_005",
+			"paymentType": "debit_card",
+			"paymentStatus": "paid",
+			"isActive": true
+		},
+		"userRole": "user",
+		"isActive": true,
+		"passwordReset": {
+			"count": 0,
+			"code": null,
+			"lastResetDate": null,
+			"expiresAt": null
+		},
+		"createdBy": "admin@example.com",
+		"updatedBy": "admin@example.com"
+	}
+]

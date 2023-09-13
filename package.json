@@ -1,22 +1,20 @@
 {
-  "name": "nextly",
-  "version": "1.0.0",
-  "description": "",
-  "main": "ecosystem.config.js",
-  "scripts": {
-    "allnpmi": "cd website && npm i -f   && cd ../admin && npm i -f   && cd ../backend && npm i -f   ",
-    "allnpmdev": "cd website && npm run dev   & cd admin && npm run dev   & cd backend && nodemon server.js  ",
-    "allnpmbuild": "cd website && npm  run build   && cd ../admin && npm run build  && cd ..",
-    "start": " pm2 start ecosystem.config.js "
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ozgurmuraterhan/nextly.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ozgurmuraterhan/nextly/issues"
-  },
-  "homepage": "https://github.com/ozgurmuraterhan/nextly#readme"
+	"name": "picfan",
+	"version": "1.0.0",
+	"description": "Central manager for admin, backend, and website project",
+	"scripts": {
+		"allnpmi": "cd website && npm i -f && cd ../admin && npm i -f && cd ../backend && npm i -f",
+		"allnpmdev": "cd website && npm run dev & cd ../admin && npm run dev & cd ../backend && npm run dev",
+		"allnpmbuild": "cd website && npm run build && cd ../admin && npm run build && cd .."
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/single-solution/picFan.git"
+	},
+	"author": "Single Solution",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/single-solution/picFan/issues"
+	},
+	"homepage": "https://github.com/single-solution/picFan"
 }
