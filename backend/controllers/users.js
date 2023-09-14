@@ -37,13 +37,13 @@ const getUser = async (request, response) => {
 		if (authenticatingDBUser?.userRole === "admin" || userID === authenticatingUserID) {
 			if (userID) query._id = userID;
 
-			const dbUsers = await users
+			const dbPayload = await users
 				.find(query, { password: 0 })
 				.limit(limit)
 				.skip(page && (page - 1) * limit);
 
-			if (dbUsers.length > 0) {
-				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found", userID ? dbUsers[0] : dbUsers);
+			if (dbPayload.length > 0) {
+				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found", userID ? dbPayload[0] : dbPayload);
 			} else {
 				return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "No Record Found!", null);
 			}
@@ -57,9 +57,9 @@ const getUser = async (request, response) => {
 
 const getUserImage = async (request, response) => {
 	try {
-		const { filename, width } = request.query;
+		const { filename, width, mimetype } = request.query;
 
-		if (!filename) {
+		if (!filename || !mimetype) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
@@ -67,10 +67,11 @@ const getUserImage = async (request, response) => {
 		const isFileExists = fs.existsSync(fileFullPath);
 
 		const sourceFile = fs.readFileSync(isFileExists ? fileFullPath : placeholderImage);
-		const optimizedImage = width ? await sharp(sourceFile).resize(parseInt(width)).toBuffer() : sourceFile;
+		const optimizedImage =
+			mimetype.startsWith("image") && width ? await sharp(sourceFile).resize(parseInt(width)).toBuffer() : sourceFile;
 
 		response.writeHead(200, {
-			"Content-Type": "image/webp",
+			"Content-Type": mimetype,
 		});
 
 		response.end(optimizedImage);
@@ -82,16 +83,16 @@ const getUserImage = async (request, response) => {
 const register = async (request, response) => {
 	const payload = request.body;
 
-	if (!payload?.email || !payload?.password) {
+	if (!payload?.phone || !payload?.password) {
 		return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 	}
 
 	try {
 		USER_FIELDS_UPDATE_BY_ADMIN_ONLY.forEach((key) => delete payload[key]);
 
-		const dbUser = await users.findOne({ email: payload?.email });
+		const dbPayload = await users.findOne({ phone: payload?.phone });
 
-		if (dbUser) {
+		if (dbPayload) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.CONFLICT, false, "Record Already Exists!", null);
 		} else {
 			const hashedPassword = await bcrypt.hash(payload?.password, 12);
@@ -118,30 +119,30 @@ const register = async (request, response) => {
 };
 
 const login = async (request, response) => {
-	const { email, password, isAdminLogin } = request.body;
+	const { phone, password, isAdminLogin } = request.body;
 
-	if (!email || !password) {
+	if (!phone || !password) {
 		return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 	}
 
 	try {
-		const dbUser = await users.findOne({ email: email });
+		const dbPayload = await users.findOne({ phone: phone });
 
-		if (dbUser) {
-			if ((isAdminLogin && dbUser?.userRole === "admin") || (!isAdminLogin && dbUser?.userRole !== "admin")) {
-				const isPasswordMatched = await bcrypt.compare(password, dbUser.password);
+		if (dbPayload) {
+			if ((isAdminLogin && dbPayload?.userRole === "admin") || (!isAdminLogin && dbPayload?.userRole !== "admin")) {
+				const isPasswordMatched = await bcrypt.compare(password, dbPayload.password);
 
 				if (isPasswordMatched) {
 					var token = jwt.sign(
 						{
-							username: dbUser.username,
-							email: dbUser.email,
-							userID: dbUser._id,
-							userRole: dbUser.userRole,
-							userStatus: dbUser.userStatus,
+							username: dbPayload.username,
+							phone: dbPayload.phone,
+							userID: dbPayload._id,
+							userRole: dbPayload.userRole,
+							userStatus: dbPayload.userStatus,
 						},
 						privateKEY,
-						LOGIN_TOKEN_PREFERENCES
+						LOGIN_TOKEN_PREFERENCES,
 					);
 
 					if (token) {
@@ -178,26 +179,26 @@ const updateUser = async (request, response) => {
 		if (authenticatingDBUser?.userRole !== "admin") USER_FIELDS_UPDATE_BY_ADMIN_ONLY.forEach((key) => delete payload[key]);
 
 		if (payload._id === authenticatingUserID || authenticatingDBUser?.userRole === "admin") {
-			const dbUser = await users.findOne({ _id: payload._id });
+			const dbPayload = await users.findOne({ _id: payload._id });
 
 			if (files.length) {
-				for (let file of files) {
-					const webpImage = await convertImageToWebp(file);
-					const generatedFileName = generateUniqueFileName(webpImage, filePath);
+				let file = files[0];
 
-					const fileFullPath = path.join(filePath, generatedFileName);
+				if (file.mimetype.startsWith("image")) file = await convertImageToWebp(file);
 
-					if (dbUser[webpImage.fieldname]) {
-						const existingFilePath = path.join(filePath, dbUser[webpImage.fieldname]);
+				const generatedFileName = generateUniqueFileName(file, filePath);
+				const fileFullPath = path.join(filePath, generatedFileName);
 
-						const isThereExistingFile = fs.existsSync(existingFilePath);
-						if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
-					}
+				if (dbPayload?.media?.filename) {
+					const existingFilePath = path.join(filePath, dbPayload.media.filename);
 
-					await fs.promises.writeFile(fileFullPath, webpImage.buffer);
-
-					payload[file.fieldname] = generatedFileName;
+					const isThereExistingFile = fs.existsSync(existingFilePath);
+					if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
 				}
+
+				await fs.promises.writeFile(fileFullPath, file.buffer);
+
+				payload.media = { mimetype: file.mimetype, filename: generatedFileName };
 			}
 
 			const updatedUser = await users.findOneAndUpdate(
@@ -205,10 +206,10 @@ const updateUser = async (request, response) => {
 				{
 					$set: {
 						...payload,
-						updatedBy: authenticatingDBUser?.id || authenticatingUserID,
+						updatedBy: authenticatingUserID,
 					},
 				},
-				{ fields: { password: 0 }, new: true }
+				{ fields: { password: 0 }, new: true },
 			);
 
 			if (updatedUser) {
@@ -222,7 +223,7 @@ const updateUser = async (request, response) => {
 				HTTP_STATUS_CODES.UNAUTHORIZED,
 				false,
 				"Access denied. Insufficient privileges!",
-				null
+				null,
 			);
 		}
 	} catch (error) {
@@ -240,10 +241,10 @@ const updatePassword = async (request, response) => {
 		}
 
 		if (userID === authenticatingUserID) {
-			const dbUser = await users.findOne({ _id: userID });
+			const dbPayload = await users.findOne({ _id: userID });
 
-			if (dbUser) {
-				const isPasswordMatched = await bcrypt.compare(oldPassword, dbUser.password);
+			if (dbPayload) {
+				const isPasswordMatched = await bcrypt.compare(oldPassword, dbPayload.password);
 
 				if (isPasswordMatched) {
 					const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -256,7 +257,7 @@ const updatePassword = async (request, response) => {
 								updatedBy: authenticatingUserID,
 							},
 						},
-						{ fields: { password: 0 }, new: true }
+						{ fields: { password: 0 }, new: true },
 					);
 
 					if (updatedUser) {
@@ -267,7 +268,7 @@ const updatePassword = async (request, response) => {
 							HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
 							false,
 							"Record updated::failure",
-							null
+							null,
 						);
 					}
 				} else {
@@ -280,7 +281,7 @@ const updatePassword = async (request, response) => {
 				HTTP_STATUS_CODES.UNAUTHORIZED,
 				false,
 				"Access denied. Insufficient privileges!",
-				null
+				null,
 			);
 		}
 	} catch (error) {
@@ -298,28 +299,28 @@ const sendPasswordResetEmail = async (request, response) => {
 	try {
 		const oneTimeCode = generateRandomNumber(6);
 		const expiresAt = addMinutesToDate(new Date(), 100);
-		const dbUser = await users.findOne({ email: email }, { password: 0 });
+		const dbPayload = await users.findOne({ email: email }, { password: 0 });
 
-		if (dbUser?._id) {
+		if (dbPayload?._id) {
 			const updatedUser = await users.findOneAndUpdate(
-				{ _id: dbUser._id },
+				{ _id: dbPayload._id },
 				{
 					passwordReset: {
-						count: dbUser?.passwordReset?.count + 1 || 1,
+						count: dbPayload?.passwordReset?.count + 1 || 1,
 						code: oneTimeCode,
 						expiresAt: expiresAt,
 					},
 				},
-				{ new: true }
+				{ new: true },
 			);
 
 			if (updatedUser) {
-				var token = jwt.sign({ email: email, userID: dbUser._id, code: oneTimeCode }, privateKEY, LOGIN_TOKEN_PREFERENCES);
+				var token = jwt.sign({ email: email, userID: dbPayload._id, code: oneTimeCode }, privateKEY, LOGIN_TOKEN_PREFERENCES);
 
 				const emailSent = await sendPasswordResetVerificationEmail(
 					process.env.ADMIN_PANEL_URL + `/reset-password?passwordReset=true&&token=${token}`,
-					dbUser.email,
-					expiresAt
+					dbPayload.email,
+					expiresAt,
 				);
 
 				if (emailSent) {
@@ -348,22 +349,22 @@ const passwordResetUsingVerificationEmail = async (request, response) => {
 	try {
 		const decodedToken = jwt.verify(token, publicKEY, LOGIN_TOKEN_PREFERENCES);
 
-		const dbUser = await users.findOne({ email: decodedToken.email, _id: decodedToken.userID }, { password: 0 });
+		const dbPayload = await users.findOne({ email: decodedToken.email, _id: decodedToken.userID }, { password: 0 });
 
-		if (dbUser) {
-			if (dbUser?.passwordReset?.expiresAt > new Date()) {
-				if (dbUser?.passwordReset?.code === decodedToken.code) {
+		if (dbPayload) {
+			if (dbPayload?.passwordReset?.expiresAt > new Date()) {
+				if (dbPayload?.passwordReset?.code === decodedToken.code) {
 					const hashedPassword = await bcrypt.hash(password, 12);
 
 					const updatedUser = await users.findOneAndUpdate(
-						{ _id: dbUser._id },
+						{ _id: dbPayload._id },
 						{
 							password: hashedPassword,
 							"passwordReset.code": null,
 							"passwordReset.lastResetDate": new Date(),
 							"passwordReset.expiresAt": null,
 						},
-						{ fields: { password: 0 }, new: true }
+						{ fields: { password: 0 }, new: true },
 					);
 					if (updatedUser) {
 						return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Password Reset::success", updatedUser);
@@ -373,7 +374,7 @@ const passwordResetUsingVerificationEmail = async (request, response) => {
 							HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
 							false,
 							"Password reset::failure",
-							null
+							null,
 						);
 					}
 				} else return sendJsonResponse(response, HTTP_STATUS_CODES.CONFLICT, false, "Email Verification::failure", null);
@@ -400,10 +401,12 @@ const deleteUser = async (request, response) => {
 			const deletedUser = await users.findOneAndDelete({ _id: userID }, { new: true });
 
 			if (deletedUser) {
-				const fileFullPath = path.join(filePath, deletedUser.profileImage);
+				if (deletedUser?.media?.filename) {
+					const fileFullPath = path.join(filePath, deletedUser.media.filename);
 
-				const isfileExists = fs.existsSync(fileFullPath);
-				if (isfileExists) await fs.promises.unlink(fileFullPath);
+					const isfileExists = fs.existsSync(fileFullPath);
+					if (isfileExists) await fs.promises.unlink(fileFullPath);
+				}
 
 				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedUser);
 			} else {
@@ -415,7 +418,7 @@ const deleteUser = async (request, response) => {
 				HTTP_STATUS_CODES.UNAUTHORIZED,
 				false,
 				"Access denied. Insufficient privileges!",
-				null
+				null,
 			);
 		}
 	} catch (error) {

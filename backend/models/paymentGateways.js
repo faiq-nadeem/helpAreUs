@@ -1,10 +1,13 @@
 const mongoose = require("mongoose");
 
-const categorySchema = mongoose.Schema(
+const paymentGatewaySchema = mongoose.Schema(
 	{
-		title: String,
+		title: { type: String, required: true },
 		description: String,
-		media: { filename: String, mimeType: String },
+		media: {
+			mimetype: String,
+			filename: String,
+		},
 		isActive: { type: Boolean, default: true },
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -14,4 +17,4 @@ const categorySchema = mongoose.Schema(
 	},
 );
 
-module.exports = mongoose.model("Categories", categorySchema);
+module.exports = mongoose.model("PaymentGateways", paymentGatewaySchema);

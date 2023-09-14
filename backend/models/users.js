@@ -2,31 +2,17 @@ const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema(
 	{
-		email: { type: String, unique: true },
 		firstName: String,
 		lastName: String,
-		phone: String,
+		phone: { type: String, unique: true },
+		email: String,
 		country: String,
-		company: String,
-		town: String,
-		address: String,
 		city: String,
 		state: String,
-		postalCode: String,
-		website: String,
+		address: String,
 		bio: String,
 		password: String,
-		profileImage: String,
-		startingCost: { type: Number, default: 0 },
-		reviews: {
-			given: [{ type: mongoose.Schema.Types.ObjectId, ref: "userReviews" }],
-			received: [{ type: mongoose.Schema.Types.ObjectId, ref: "userReviews" }],
-		},
-		photographer: {
-			equipment: String,
-			photographyTypes: [{ type: mongoose.Schema.Types.ObjectId, ref: "photographyTypes" }],
-			showBookingCalendar: { type: Boolean, default: true },
-		},
+		media: { filename: String, mimeType: String },
 		socialMedia: {
 			tiktok: String,
 			instagram: String,
@@ -34,28 +20,6 @@ const userSchema = mongoose.Schema(
 			twitter: String,
 			linkedin: String,
 			youtube: String,
-		},
-		reviewPlatform: {
-			google: String,
-			facebook: String,
-			yelp: String,
-			tripadvisor: String,
-		},
-		subscription: {
-			subscriptionPlanID: { type: mongoose.Schema.Types.ObjectId, ref: "subscriptions" },
-			subscriptionPaymentID: String,
-			activationDate: Date,
-			expiryDate: Date,
-			duration: { type: String, default: "month" },
-			paymentType: [String],
-			paymentStatus: { type: String, default: "unpaid" },
-			isActive: { type: Boolean, default: false },
-			isActiveByAdmin: { type: Boolean, default: false },
-			cancelation: {
-				status: { type: Boolean, default: false },
-				date: Date,
-				reason: String,
-			},
 		},
 		passwordReset: {
 			count: { type: Number, default: 0 },
@@ -65,12 +29,12 @@ const userSchema = mongoose.Schema(
 		},
 		userRole: { type: String, default: "user" },
 		isActive: { type: Boolean, default: true },
-		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
-		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
+		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 	},
 	{
 		timestamps: true,
-	}
+	},
 );
 
-module.exports = mongoose.model("users", userSchema);
+module.exports = mongoose.model("Users", userSchema);

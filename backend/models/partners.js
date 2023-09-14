@@ -1,19 +1,16 @@
 const mongoose = require("mongoose");
 
-const productSchema = mongoose.Schema(
+const partnerSchema = mongoose.Schema(
 	{
 		title: String,
-		price: Number,
 		description: String,
-		media: [
-			{
-				filename: String,
-				mimetype: String,
-			},
-		],
-		partners: [{ type: mongoose.Schema.Types.ObjectId, ref: "Partners" }],
+		organizationCategory: { type: mongoose.Schema.Types.ObjectId, ref: "OrganizationCategories" },
+		website: String,
+		email: String,
+		phone: String,
+		address: String,
+		media: { filename: String, mimeType: String },
 		projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }],
-		categoryID: { type: mongoose.Schema.Types.ObjectId, ref: "Categories" },
 		isActive: { type: Boolean, default: true },
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -23,4 +20,4 @@ const productSchema = mongoose.Schema(
 	},
 );
 
-module.exports = mongoose.model("Products", productSchema);
+module.exports = mongoose.model("Partners", partnerSchema);

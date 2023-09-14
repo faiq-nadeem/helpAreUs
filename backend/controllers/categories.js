@@ -1,4 +1,4 @@
-const categories = require("../models/categories.js");
+const Categories = require("../models/categories.js");
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
@@ -9,25 +9,18 @@ const filePath = path.join(__dirname, "../assets/images/categories");
 
 const getCategories = async (request, response) => {
 	try {
-		const { _id: categoryID, page, limit } = request.query;
+		const { _id: itemID, page, limit } = request.query;
 
-		if (!categoryID && (!page || !limit)) {
+		if (!itemID && (!page || !limit)) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbCategories = await categories
-			.find(categoryID ? { _id: categoryID } : {})
+		const dbPayload = await Categories.find(itemID ? { _id: itemID } : {})
 			.limit(limit)
 			.skip(page && (page - 1) * limit);
 
-		if (dbCategories.length > 0) {
-			return sendJsonResponse(
-				response,
-				HTTP_STATUS_CODES.OK,
-				true,
-				"Record Found!",
-				categoryID ? dbCategories[0] : dbCategories,
-			);
+		if (dbPayload.length > 0) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", itemID ? dbPayload[0] : dbPayload);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
 		}
@@ -38,9 +31,9 @@ const getCategories = async (request, response) => {
 
 const getCategoryImage = async (request, response) => {
 	try {
-		const { filename, width } = request.query;
+		const { filename, width, mimetype } = request.query;
 
-		if (!filename) {
+		if (!filename || !mimetype) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
@@ -48,10 +41,11 @@ const getCategoryImage = async (request, response) => {
 		const isFileExists = fs.existsSync(fileFullPath);
 
 		const sourceFile = fs.readFileSync(isFileExists ? fileFullPath : placeholderImage);
-		const optimizedImage = width ? await sharp(sourceFile).resize(parseInt(width)).toBuffer() : sourceFile;
+		const optimizedImage =
+			mimetype.startsWith("image") && width ? await sharp(sourceFile).resize(parseInt(width)).toBuffer() : sourceFile;
 
 		response.writeHead(200, {
-			"Content-Type": "image/webp",
+			"Content-Type": mimetype,
 		});
 
 		response.end(optimizedImage);
@@ -70,26 +64,29 @@ const createCategory = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		for (let file of files) {
-			const webpImage = await convertImageToWebp(file);
-			const generatedFileName = generateUniqueFileName(webpImage, filePath);
+		if (files.length) {
+			let file = files[0];
 
+			if (file.mimetype.startsWith("image")) file = await convertImageToWebp(file);
+
+			const generatedFileName = generateUniqueFileName(file, filePath);
 			const fileFullPath = path.join(filePath, generatedFileName);
-			payload[file.fieldname] = generatedFileName;
 
-			await fs.promises.writeFile(fileFullPath, webpImage.buffer);
+			await fs.promises.writeFile(fileFullPath, file.buffer);
+
+			payload.media = { mimetype: file.mimetype, filename: generatedFileName };
 		}
 
-		const category = new categories({
+		const dbNewRecordObject = new Categories({
 			...payload,
 			createdBy: authenticatingUserID,
-			updatedby: authenticatingUserID,
+			updatedBy: authenticatingUserID,
 		});
 
-		const newCategory = await category.save();
+		const createdPayload = await dbNewRecordObject.save();
 
-		if (newCategory) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newCategory);
+		if (createdPayload) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", createdPayload);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record created::failure", null);
 		}
@@ -108,33 +105,36 @@ const updateCategory = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbCategory = await categories.findOne({ _id: payload._id });
+		const dbPayload = await Categories.findOne({ _id: payload._id });
 
 		if (files.length) {
-			for (let file of files) {
-				const webpImage = await convertImageToWebp(file);
-				const generatedFileName = generateUniqueFileName(webpImage, filePath);
+			let file = files[0];
 
-				const fileFullPath = path.join(filePath, generatedFileName);
+			if (file.mimetype.startsWith("image")) file = await convertImageToWebp(file);
 
-				const existingFilePath = path.join(filePath, dbCategory[webpImage.fieldname]);
+			const generatedFileName = generateUniqueFileName(file, filePath);
+			const fileFullPath = path.join(filePath, generatedFileName);
+
+			if (dbPayload?.media?.filename) {
+				const existingFilePath = path.join(filePath, dbPayload.media.filename);
+
 				const isThereExistingFile = fs.existsSync(existingFilePath);
 				if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
-
-				await fs.promises.writeFile(fileFullPath, webpImage.buffer);
-
-				payload[file.fieldname] = generatedFileName;
 			}
+
+			await fs.promises.writeFile(fileFullPath, file.buffer);
+
+			payload.media = { mimetype: file.mimetype, filename: generatedFileName };
 		}
 
-		const updatedCategory = await categories.findOneAndUpdate(
+		const updatedPayload = await Categories.findOneAndUpdate(
 			{ _id: payload._id },
 			{ $set: { ...payload, updatedBy: authenticatingUserID } },
 			{ new: true },
 		);
 
-		if (updatedCategory) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedCategory);
+		if (updatedPayload) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedPayload);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record updated::failure", null);
 		}
@@ -145,21 +145,23 @@ const updateCategory = async (request, response) => {
 
 const deleteCategory = async (request, response) => {
 	try {
-		const { _id: categoryID } = request.query;
+		const { _id: itemID } = request.query;
 
-		if (!categoryID) {
+		if (!itemID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const deletedCategory = await categories.findOneAndDelete({ _id: categoryID }, { new: true });
+		const deletedPayload = await Categories.findOneAndDelete({ _id: itemID }, { new: true });
 
-		if (deletedCategory) {
-			const fileFullPath = path.join(filePath, deletedCategory.featuredImage);
+		if (deletedPayload) {
+			if (deletedPayload?.media?.filename) {
+				const fileFullPath = path.join(filePath, deletedPayload.media.filename);
 
-			const isfileExists = fs.existsSync(fileFullPath);
-			if (isfileExists) await fs.promises.unlink(fileFullPath);
+				const isfileExists = fs.existsSync(fileFullPath);
+				if (isfileExists) await fs.promises.unlink(fileFullPath);
+			}
 
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedCategory);
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedPayload);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
 		}

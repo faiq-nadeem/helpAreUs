@@ -1,17 +1,16 @@
 const express = require("express");
 const { jwtAuthentication } = require("../middlewares/authentications/jwtAuthentication.js");
-
-const { getBanners, createBanner, updateBanner, deleteBanner, getBannerImage } = require("../controllers/banners.js");
 const { userAuthorization } = require("../middlewares/authentications/userAuthorization.js");
 const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
+const { getPartners, createPartner, updatePartner, deletePartner, getPartnerImage } = require("../controllers/partners.js");
 
 const router = express.Router();
 
-router.get("/", getBanners);
-router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), createBanner);
-router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updateBanner);
-router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteBanner);
+router.get("/", getPartners);
+router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), createPartner);
+router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updatePartner);
+router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deletePartner);
 
-router.get("/image", getBannerImage);
+router.get("/image", getPartnerImage);
 
 module.exports = router;

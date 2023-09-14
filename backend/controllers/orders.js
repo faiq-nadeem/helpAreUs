@@ -1,27 +1,30 @@
-const photographyTypes = require("../models/photographyTypes.js");
+const Orders = require("../models/orders.js");
 const { sendJsonResponse } = require("../utils/helpers.js");
 
-const getPhotographyTypes = async (request, response) => {
+const getOrders = async (request, response) => {
 	try {
-		const { _id: photographyTypeID, page, limit } = request.query;
+		const { _id: orderID, page, limit, count } = request.query;
 
-		if (!photographyTypeID && (!page || !limit)) {
+		// Check for missing parameters
+		if (!orderID && (!page || !limit) && !count) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbPhotographyTypes = await photographyTypes
-			.find(photographyTypeID ? { _id: photographyTypeID } : {})
-			.limit(limit)
-			.skip(page && (page - 1) * limit);
+		// If count is available, return the number of records
+		if (count) {
+			const totalOrders = await Orders.count();
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Total Records", totalOrders);
+		}
 
-		if (dbPhotographyTypes.length > 0) {
-			return sendJsonResponse(
-				response,
-				HTTP_STATUS_CODES.OK,
-				true,
-				"Record Found!",
-				photographyTypeID ? dbPhotographyTypes[0] : dbPhotographyTypes
-			);
+		// Fetch orders based on the provided parameters
+		const dbOrders = await orders
+			.find(orderID ? { _id: orderID } : {})
+			.limit(Number(limit))
+			.skip(page && (Number(page) - 1) * Number(limit));
+
+		// Send the appropriate response based on the fetched orders
+		if (dbOrders.length > 0) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", orderID ? dbOrders[0] : dbOrders);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
 		}
@@ -30,25 +33,25 @@ const getPhotographyTypes = async (request, response) => {
 	}
 };
 
-const createPhotographyType = async (request, response) => {
+const createOrder = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
 
-		if (!payload.title) {
+		if (!payload?.item?.length) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const photographyType = new photographyTypes({
+		const order = new orders({
 			...payload,
 			createdBy: authenticatingUserID,
 			updatedBy: authenticatingUserID,
 		});
 
-		const newPhotographyType = await photographyType.save();
+		const newOrder = await Orders.save();
 
-		if (newPhotographyType) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newPhotographyType);
+		if (newOrder) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newOrder);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record created::failure", null);
 		}
@@ -57,7 +60,7 @@ const createPhotographyType = async (request, response) => {
 	}
 };
 
-const updatePhotographyType = async (request, response) => {
+const updateOrder = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -66,14 +69,14 @@ const updatePhotographyType = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const updatedPhotographyType = await photographyTypes.findOneAndUpdate(
+		const updatedOrder = await Orders.findOneAndUpdate(
 			{ _id: payload._id },
 			{ $set: { ...payload, updatedBy: authenticatingUserID } },
-			{ new: true }
+			{ new: true },
 		);
 
-		if (updatedPhotographyType) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedPhotographyType);
+		if (updatedOrder) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedOrder);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record updated::failure", null);
 		}
@@ -82,18 +85,18 @@ const updatePhotographyType = async (request, response) => {
 	}
 };
 
-const deletePhotographyType = async (request, response) => {
+const deleteOrder = async (request, response) => {
 	try {
-		const { _id: photographyTypeID } = request.query;
+		const { _id: orderID } = request.query;
 
-		if (!photographyTypeID) {
+		if (!orderID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const deletedPhotographyType = await photographyTypes.findOneAndDelete({ _id: photographyTypeID }, { new: true });
+		const deletedOrder = await Orders.findOneAndDelete({ _id: orderID }, { new: true });
 
-		if (deletedPhotographyType) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedPhotographyType);
+		if (deletedOrder) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedOrder);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
 		}
@@ -103,8 +106,8 @@ const deletePhotographyType = async (request, response) => {
 };
 
 module.exports = {
-	getPhotographyTypes,
-	createPhotographyType,
-	updatePhotographyType,
-	deletePhotographyType,
+	getOrders,
+	createOrder,
+	updateOrder,
+	deleteOrder,
 };

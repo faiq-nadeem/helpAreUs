@@ -1,36 +1,26 @@
-const banners = require("../models/banners.js");
+const Partners = require("../models/partners.js");
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const { sendJsonResponse, convertImageToWebp, generateUniqueFileName } = require("../utils/helpers.js");
 
 const placeholderImage = path.join(__dirname, "../assets/images/placeholder.webp");
-const filePath = path.join(__dirname, "../assets/images/banners");
+const filePath = path.join(__dirname, "../assets/images/partners");
 
-const getBanners = async (request, response) => {
+const getPartners = async (request, response) => {
 	try {
-		const { _id: bannerID, page, limit, count } = request.query;
+		const { _id: partnerID, page, limit } = request.query;
 
-		// Check for missing parameters
-		if (!bannerID && (!page || !limit) && !count) {
+		if (!partnerID && (!page || !limit)) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		// If count is available, return the number of records
-		if (count) {
-			const totalBanners = await banners.count();
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Total Records", totalBanners);
-		}
+		const dbPartners = await Partners.find(partnerID ? { _id: partnerID } : {})
+			.limit(limit)
+			.skip(page && (page - 1) * limit);
 
-		// Fetch banners based on the provided parameters
-		const dbBanners = await banners
-			.find(bannerID ? { _id: bannerID } : {})
-			.limit(Number(limit))
-			.skip(page && (Number(page) - 1) * Number(limit));
-
-		// Send the appropriate response based on the fetched banners
-		if (dbBanners.length > 0) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", bannerID ? dbBanners[0] : dbBanners);
+		if (dbPartners.length > 0) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", partnerID ? dbPartners[0] : dbPartners);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
 		}
@@ -39,7 +29,7 @@ const getBanners = async (request, response) => {
 	}
 };
 
-const getBannerImage = async (request, response) => {
+const getPartnerImage = async (request, response) => {
 	try {
 		const { filename, width } = request.query;
 
@@ -63,7 +53,7 @@ const getBannerImage = async (request, response) => {
 	}
 };
 
-const createBanner = async (request, response) => {
+const createPartner = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -83,16 +73,16 @@ const createBanner = async (request, response) => {
 			await fs.promises.writeFile(fileFullPath, webpImage.buffer);
 		}
 
-		const banner = new banners({
+		const partner = new Partners({
 			...payload,
 			createdBy: authenticatingUserID,
 			updatedBy: authenticatingUserID,
 		});
 
-		const newBanner = await banner.save();
+		const newPartner = await partner.save();
 
-		if (newBanner) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newBanner);
+		if (newPartner) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newPartner);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record created::failure", null);
 		}
@@ -101,7 +91,7 @@ const createBanner = async (request, response) => {
 	}
 };
 
-const updateBanner = async (request, response) => {
+const updatePartner = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -111,7 +101,7 @@ const updateBanner = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbBanner = await banners.findOne({ _id: payload._id });
+		const dbPartner = await partners.findOne({ _id: payload._id });
 
 		if (files.length) {
 			for (let file of files) {
@@ -120,7 +110,7 @@ const updateBanner = async (request, response) => {
 
 				const fileFullPath = path.join(filePath, generatedFileName);
 
-				const existingFilePath = path.join(filePath, dbBanner[webpImage.fieldname]);
+				const existingFilePath = path.join(filePath, dbPartner[webpImage.fieldname]);
 				const isThereExistingFile = fs.existsSync(existingFilePath);
 				if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
 
@@ -130,14 +120,14 @@ const updateBanner = async (request, response) => {
 			}
 		}
 
-		const updatedBanner = await banners.findOneAndUpdate(
+		const updatedPartner = await Partners.findOneAndUpdate(
 			{ _id: payload._id },
 			{ $set: { ...payload, updatedBy: authenticatingUserID } },
-			{ new: true }
+			{ new: true },
 		);
 
-		if (updatedBanner) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedBanner);
+		if (updatedPartner) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedPartner);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record updated::failure", null);
 		}
@@ -146,23 +136,23 @@ const updateBanner = async (request, response) => {
 	}
 };
 
-const deleteBanner = async (request, response) => {
+const deletePartner = async (request, response) => {
 	try {
-		const { _id: bannerID } = request.query;
+		const { _id: partnerID } = request.query;
 
-		if (!bannerID) {
+		if (!partnerID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const deletedBanner = await banners.findOneAndDelete({ _id: bannerID }, { new: true });
+		const deletedPartner = await Partners.findOneAndDelete({ _id: partnerID }, { new: true });
 
-		if (deletedBanner) {
-			const fileFullPath = path.join(filePath, deletedBanner.featuredImage);
+		if (deletedPartner) {
+			const fileFullPath = path.join(filePath, deletedPartner.featuredImage);
 
 			const isfileExists = fs.existsSync(fileFullPath);
 			if (isfileExists) await fs.promises.unlink(fileFullPath);
 
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedBanner);
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedPartner);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
 		}
@@ -172,9 +162,9 @@ const deleteBanner = async (request, response) => {
 };
 
 module.exports = {
-	getBanners,
-	getBannerImage,
-	createBanner,
-	updateBanner,
-	deleteBanner,
+	getPartners,
+	getPartnerImage,
+	createPartner,
+	updatePartner,
+	deletePartner,
 };

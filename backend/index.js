@@ -28,21 +28,20 @@ app.get("/", (req, res) => {
 	res.send("Welcome to Server");
 });
 
+app.use("/v1/categories", require("./routes/categories.js"));
+app.use("/v1/guests", require("./routes/guests.js"));
+app.use("/v1/migrations", require("./routes/migrations.js"));
+app.use("/v1/orders", require("./routes/orders.js"));
 app.use("/v1/partners", require("./routes/partners.js"));
+app.use("/v1/payment-gateways", require("./routes/paymentGateways.js"));
 app.use("/v1/projects", require("./routes/projects.js"));
 app.use("/v1/products", require("./routes/products.js"));
-app.use("/v1/categories", require("./routes/categories.js"));
-app.use("/v1/orders", require("./routes/orders.js"));
-app.use("/v1/payment-gateways", require("./routes/paymentGateways.js"));
-app.use("/v1/migrations", require("./routes/migrations.js"));
 app.use("/v1/users", require("./routes/users.js"));
-app.use("/v1/guests", require("./routes/guests.js"));
 
 app.use((error, request, response, next) => {
 	return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
 });
 
-console.log(process.env.MONGO_DB_CONNECTION_URL);
 mongoose
 	.connect(process.env.MONGO_DB_CONNECTION_URL, {
 		useNewUrlParser: true,

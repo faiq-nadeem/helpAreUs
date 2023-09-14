@@ -1,23 +1,14 @@
 const express = require("express");
 const { jwtAuthentication } = require("../middlewares/authentications/jwtAuthentication.js");
 
-const {
-	createCategory,
-	updateCategory,
-	deleteCategory,
-	getCategories,
-	getCategoryImage,
-} = require("../controllers/categories.js");
 const { userAuthorization } = require("../middlewares/authentications/userAuthorization.js");
-const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
+const { getOrders, createOrder, updateOrder, deleteOrder } = require("../controllers/orders.js");
 
 const router = express.Router();
 
-router.get("/", getCategories);
-router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), createCategory);
-router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updateCategory);
-router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteCategory);
-
-router.get("/image", getCategoryImage);
+router.get("/", getOrders);
+router.post("/", createOrder);
+router.put("/", jwtAuthentication, userAuthorization(["admin"]), updateOrder);
+router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteOrder);
 
 module.exports = router;

@@ -1,32 +1,31 @@
-const clientPackages = require("../models/clientPackages.js");
+const PaymentGateways = require("../models/paymentGateways.js");
 const users = require("../models/users.js");
 const { sendJsonResponse } = require("../utils/helpers.js");
 
-const getClientPackages = async (request, response) => {
+const getPaymentGateways = async (request, response) => {
 	let query = {};
 
 	try {
-		const { _id: clientPackageID, page, limit, userID } = request.query;
+		const { _id: paymentGatewayID, page, limit, userID } = request.query;
 
-		if (!clientPackageID && (!page || !limit || !userID)) {
+		if (!paymentGatewayID && (!page || !limit || !userID)) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		if (clientPackageID) query._id = userPortfolioID;
+		if (paymentGatewayID) query._id = paymentGatewayID;
 		if (userID) query.userID = userID;
 
-		const dbClientPackages = await clientPackages
-			.find(query)
+		const dbPaymentGateways = await PaymentGateways.find(query)
 			.limit(limit)
 			.skip(page && (page - 1) * limit);
 
-		if (dbClientPackages.length > 0) {
+		if (dbPaymentGateways.length > 0) {
 			return sendJsonResponse(
 				response,
 				HTTP_STATUS_CODES.OK,
 				true,
 				"Record Found!",
-				clientPackageID ? dbClientPackages[0] : dbClientPackages
+				paymentGatewayID ? dbPaymentGateways[0] : dbPaymentGateways,
 			);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
@@ -36,28 +35,28 @@ const getClientPackages = async (request, response) => {
 	}
 };
 
-const createClientPackage = async (request, response) => {
+const createPaymentGateway = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
 
-		if (!payload.userID || !payload.title || !payload.price) {
+		if (!payload.userID || !payload.schedule.date) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
 		const authenticatingDBUser = await users.findOne({ _id: authenticatingUserID });
 
 		if (payload?.userID === authenticatingUserID || authenticatingDBUser?.userRole === "admin") {
-			const clientPackage = new clientPackages({
+			const paymentGateway = new PaymentGateways({
 				...payload,
 				createdBy: authenticatingUserID,
 				updatedBy: authenticatingUserID,
 			});
 
-			const newClientPackage = await clientPackage.save();
+			const newPaymentGateway = await paymentGateway.save();
 
-			if (newClientPackage) {
-				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newClientPackage);
+			if (newPaymentGateway) {
+				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newPaymentGateway);
 			} else {
 				return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record created::failure", null);
 			}
@@ -69,7 +68,7 @@ const createClientPackage = async (request, response) => {
 	}
 };
 
-const updateClientPackage = async (request, response) => {
+const updatePaymentGateway = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -78,17 +77,17 @@ const updateClientPackage = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const authenticatingDBUser = await users.findOne({ _id: authenticatingUserID });
+		const authenticatingDBUser = await PaymentGateways.findOne({ _id: authenticatingUserID });
 
 		if (payload?.userID === authenticatingUserID || authenticatingDBUser?.userRole === "admin") {
-			const updatedClientPackage = await clientPackages.findOneAndUpdate(
+			const updatedPaymentGateway = await paymentGateways.findOneAndUpdate(
 				{ _id: payload._id },
 				{ $set: { ...payload, updatedBy: authenticatingUserID } },
-				{ new: true }
+				{ new: true },
 			);
 
-			if (updatedClientPackage) {
-				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedClientPackage);
+			if (updatedPaymentGateway) {
+				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedPaymentGateway);
 			} else {
 				return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record updated::failure", null);
 			}
@@ -100,23 +99,23 @@ const updateClientPackage = async (request, response) => {
 	}
 };
 
-const deleteClientPackage = async (request, response) => {
+const deletePaymentGateway = async (request, response) => {
 	try {
-		const { _id: clientPackageID } = request.query;
+		const { _id: paymentGatewayID } = request.query;
 		const { userID: authenticatingUserID } = request.jwtPayload;
 
-		if (!clientPackageID) {
+		if (!paymentGatewayID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
 		const authenticatingDBUser = await users.findOne({ _id: authenticatingUserID });
-		const dbClientPackage = await clientPackages.findOne({ _id: clientPackageID });
+		const dbPaymentGateway = await PaymentGateways.findOne({ _id: paymentGatewayID });
 
-		if (dbClientPackage.userID.toString() === authenticatingUserID || authenticatingDBUser.userRole === "admin") {
-			const deletedClientPackage = await clientPackages.findOneAndDelete({ _id: clientPackageID }, { new: true });
+		if (dbPaymentGateway.userID.toString() === authenticatingUserID || authenticatingDBUser.userRole === "admin") {
+			const deletedPaymentGateway = await paymentGateways.findOneAndDelete({ _id: paymentGatewayID }, { new: true });
 
-			if (deletedClientPackage) {
-				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedClientPackage);
+			if (deletedPaymentGateway) {
+				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedPaymentGateway);
 			} else {
 				return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
 			}
@@ -129,8 +128,8 @@ const deleteClientPackage = async (request, response) => {
 };
 
 module.exports = {
-	getClientPackages,
-	createClientPackage,
-	updateClientPackage,
-	deleteClientPackage,
+	getPaymentGateways,
+	createPaymentGateway,
+	updatePaymentGateway,
+	deletePaymentGateway,
 };

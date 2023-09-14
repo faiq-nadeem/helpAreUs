@@ -1,33 +1,26 @@
-const testimonials = require("../models/testimonials.js");
+const Projects = require("../models/projects.js");
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const { sendJsonResponse, convertImageToWebp, generateUniqueFileName } = require("../utils/helpers.js");
 
 const placeholderImage = path.join(__dirname, "../assets/images/placeholder.webp");
-const filePath = path.join(__dirname, "../assets/images/testimonials");
+const filePath = path.join(__dirname, "../assets/images/projects");
 
-const getTestimonials = async (request, response) => {
+const getProjects = async (request, response) => {
 	try {
-		const { _id: testimonialID, page, limit } = request.query;
+		const { _id: projectID, page, limit } = request.query;
 
-		if (!testimonialID && (!page || !limit)) {
+		if (!projectID && (!page || !limit)) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbTestimonials = await testimonials
-			.find(testimonialID ? { _id: testimonialID } : {})
+		const dbProjects = await Projects.find(projectID ? { _id: projectID } : {})
 			.limit(limit)
 			.skip(page && (page - 1) * limit);
 
-		if (dbTestimonials.length > 0) {
-			return sendJsonResponse(
-				response,
-				HTTP_STATUS_CODES.OK,
-				true,
-				"Record Found!",
-				testimonialID ? dbTestimonials[0] : dbTestimonials
-			);
+		if (dbProjects.length > 0) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", projectID ? dbProjects[0] : dbProjects);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
 		}
@@ -36,7 +29,7 @@ const getTestimonials = async (request, response) => {
 	}
 };
 
-const getTestimonialImage = async (request, response) => {
+const getProjectImage = async (request, response) => {
 	try {
 		const { filename, width } = request.query;
 
@@ -60,7 +53,7 @@ const getTestimonialImage = async (request, response) => {
 	}
 };
 
-const createTestimonial = async (request, response) => {
+const createProject = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -80,16 +73,16 @@ const createTestimonial = async (request, response) => {
 			await fs.promises.writeFile(fileFullPath, webpImage.buffer);
 		}
 
-		const testimonial = new testimonials({
+		const project = new Projects({
 			...payload,
 			createdBy: authenticatingUserID,
 			updatedBy: authenticatingUserID,
 		});
 
-		const newTestimonial = await testimonial.save();
+		const newProject = await project.save();
 
-		if (newTestimonial) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newTestimonial);
+		if (newProject) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", newProject);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record created::failure", null);
 		}
@@ -98,7 +91,7 @@ const createTestimonial = async (request, response) => {
 	}
 };
 
-const updateTestimonial = async (request, response) => {
+const updateProject = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -108,7 +101,7 @@ const updateTestimonial = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbTestimonial = await testimonials.findOne({ _id: payload._id });
+		const dbProject = await projects.findOne({ _id: payload._id });
 
 		if (files.length) {
 			for (let file of files) {
@@ -117,7 +110,7 @@ const updateTestimonial = async (request, response) => {
 
 				const fileFullPath = path.join(filePath, generatedFileName);
 
-				const existingFilePath = path.join(filePath, dbTestimonial[webpImage.fieldname]);
+				const existingFilePath = path.join(filePath, dbProject[webpImage.fieldname]);
 				const isThereExistingFile = fs.existsSync(existingFilePath);
 				if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
 
@@ -127,14 +120,14 @@ const updateTestimonial = async (request, response) => {
 			}
 		}
 
-		const updatedTestimonial = await testimonials.findOneAndUpdate(
+		const updatedProject = await Projects.findOneAndUpdate(
 			{ _id: payload._id },
 			{ $set: { ...payload, updatedBy: authenticatingUserID } },
-			{ new: true }
+			{ new: true },
 		);
 
-		if (updatedTestimonial) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedTestimonial);
+		if (updatedProject) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedProject);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record updated::failure", null);
 		}
@@ -143,23 +136,23 @@ const updateTestimonial = async (request, response) => {
 	}
 };
 
-const deleteTestimonial = async (request, response) => {
+const deleteProject = async (request, response) => {
 	try {
-		const { _id: testimonialID } = request.query;
+		const { _id: projectID } = request.query;
 
-		if (!testimonialID) {
+		if (!projectID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const deletedTestimonial = await testimonials.findOneAndDelete({ _id: testimonialID }, { new: true });
+		const deletedProject = await Projects.findOneAndDelete({ _id: projectID }, { new: true });
 
-		if (deletedTestimonial) {
-			const fileFullPath = path.join(filePath, deletedTestimonial.featuredImage);
+		if (deletedProject) {
+			const fileFullPath = path.join(filePath, deletedProject.featuredImage);
 
 			const isfileExists = fs.existsSync(fileFullPath);
 			if (isfileExists) await fs.promises.unlink(fileFullPath);
 
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedTestimonial);
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedProject);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
 		}
@@ -169,9 +162,9 @@ const deleteTestimonial = async (request, response) => {
 };
 
 module.exports = {
-	getTestimonials,
-	getTestimonialImage,
-	createTestimonial,
-	updateTestimonial,
-	deleteTestimonial,
+	getProjects,
+	getProjectImage,
+	createProject,
+	updateProject,
+	deleteProject,
 };

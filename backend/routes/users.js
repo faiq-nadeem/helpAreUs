@@ -11,7 +11,6 @@ const {
 	passwordResetUsingVerificationEmail,
 	deleteUser,
 	getUserImage,
-	getPhotographers,
 } = require("../controllers/users.js");
 const { userAuthorization } = require("../middlewares/authentications/userAuthorization.js");
 const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
@@ -19,7 +18,7 @@ const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
 const router = express.Router();
 
 router.get("/", jwtAuthentication, userAuthorization(["admin", "user", "photographer"]), getUser);
-router.post("/", multerMiddleware(), register);
+router.post("/", register);
 router.put("/", jwtAuthentication, userAuthorization(["admin", "user", "photographer"]), multerMiddleware(), updateUser);
 router.delete("/", jwtAuthentication, userAuthorization(["admin", "user", "photographer"]), deleteUser);
 

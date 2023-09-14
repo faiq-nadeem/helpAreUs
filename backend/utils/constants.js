@@ -23,20 +23,7 @@ global.EXPRESS_RATE_LIMIT = {
 	max: 1000, // limit each IP to 100 requests per windowMs
 };
 
-global.USER_FIELDS_UPDATE_BY_ADMIN_ONLY = [
-	"reviews",
-	"subscription.subscriptionPaymentID",
-	"subscription.activationDate",
-	"subscription.expiryDate",
-	"subscription.paymentType",
-	"subscription.paymentStatus",
-	"subscription.isActive",
-	"passwordReset",
-	// "userRole",
-	"isActive",
-	"createdBy",
-	"updatedBy",
-];
+global.USER_FIELDS_UPDATE_BY_ADMIN_ONLY = ["passwordReset", "userRole", "isActive", "createdBy", "updatedBy"];
 
 global.GUESTS_PRODUCTS_IGNORED_FIELDS = {
 	isActive: 0,
