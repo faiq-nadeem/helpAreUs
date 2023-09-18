@@ -9,7 +9,7 @@ const partnerSchema = mongoose.Schema(
 		email: String,
 		phone: String,
 		address: String,
-		media: { filename: String, mimeType: String },
+		media: { filename: String, mimetype: String },
 		projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }],
 		isActive: { type: Boolean, default: true },
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

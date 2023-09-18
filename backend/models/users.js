@@ -12,7 +12,7 @@ const userSchema = mongoose.Schema(
 		address: String,
 		bio: String,
 		password: String,
-		media: { filename: String, mimeType: String },
+		media: { filename: String, mimetype: String },
 		socialMedia: {
 			tiktok: String,
 			instagram: String,

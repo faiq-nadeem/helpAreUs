@@ -8,7 +8,7 @@ const subscriptionSchema = mongoose.Schema(
 		email: String,
 		phone: String,
 		address: String,
-		media: { filename: String, mimeType: String },
+		media: { filename: String, mimetype: String },
 		partners: [{ type: mongoose.Schema.Types.ObjectId, ref: "Partners" }],
 		isActive: { type: Boolean, default: true },
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
