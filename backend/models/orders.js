@@ -16,8 +16,8 @@ const orderSchema = mongoose.Schema(
 		notes: String,
 		orderStatus: {
 			type: String,
-			enum: ["Pending", "Processed", "Shipped", "Delivered", "Cancelled"],
-			default: "Pending",
+			enum: ["pending", "processed", "shipped", "delivered", "cancelled"],
+			default: "pending",
 		},
 		shippingAddress: {
 			addressLine1: String,
@@ -35,7 +35,14 @@ const orderSchema = mongoose.Schema(
 			postalCode: String,
 			country: String,
 		},
-		paymentMethod: { type: String, enum: ["Credit Card", "PayPal", "Bank Transfer"] },
+		paymentMethod: {
+			method: { type: String, enum: ["Credit Card", "PayPal", "Bank Transfer"] },
+			status: {
+				type: String,
+				enum: ["paid", "unpaid", "pending", "cancelled"],
+				default: "unpaid",
+			},
+		},
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 	},

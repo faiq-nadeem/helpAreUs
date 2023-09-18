@@ -1,13 +1,13 @@
-const PaymentGateways = require("../models/paymentGateways.js");
+const Organizations = require("../models/organizations.js");
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const { sendJsonResponse, convertImageToWebp, generateUniqueFileName } = require("../utils/helpers.js");
 
 const placeholderImage = path.join(__dirname, "../assets/images/placeholder.webp");
-const filePath = path.join(__dirname, "../assets/images/paymentGateways");
+const filePath = path.join(__dirname, "../assets/images/organizations");
 
-const getPaymentGateways = async (request, response) => {
+const getOrganizations = async (request, response) => {
 	try {
 		const { _id: itemID, page, limit } = request.query;
 
@@ -15,7 +15,7 @@ const getPaymentGateways = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbPayload = await PaymentGateways.find(itemID ? { _id: itemID } : {})
+		const dbPayload = await Organizations.find(itemID ? { _id: itemID } : {})
 			.limit(limit)
 			.skip(page && (page - 1) * limit);
 
@@ -29,7 +29,7 @@ const getPaymentGateways = async (request, response) => {
 	}
 };
 
-const getPaymentGatewayImage = async (request, response) => {
+const getOrganizationImage = async (request, response) => {
 	try {
 		const { filename, width, mimetype } = request.query;
 
@@ -54,11 +54,9 @@ const getPaymentGatewayImage = async (request, response) => {
 	}
 };
 
-const createPaymentGateway = async (request, response) => {
+const createOrganization = async (request, response) => {
 	try {
 		const payload = request.body;
-
-		console.log(payload);
 		const { userID: authenticatingUserID } = request.jwtPayload;
 		const files = request.files;
 
@@ -66,18 +64,20 @@ const createPaymentGateway = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		let file = files[0];
+		if (files.length) {
+			let file = files[0];
 
-		if (file.mimetype.startsWith("image")) file = await convertImageToWebp(file);
+			if (file.mimetype.startsWith("image")) file = await convertImageToWebp(file);
 
-		const generatedFileName = generateUniqueFileName(file, filePath);
-		const fileFullPath = path.join(filePath, generatedFileName);
+			const generatedFileName = generateUniqueFileName(file, filePath);
+			const fileFullPath = path.join(filePath, generatedFileName);
 
-		await fs.promises.writeFile(fileFullPath, file.buffer);
+			await fs.promises.writeFile(fileFullPath, file.buffer);
 
-		payload.media = { mimetype: file.mimetype, filename: generatedFileName };
+			payload.media = { mimetype: file.mimetype, filename: generatedFileName };
+		}
 
-		const dbNewRecordObject = new PaymentGateways({
+		const dbNewRecordObject = new Organizations({
 			...payload,
 			createdBy: authenticatingUserID,
 			updatedBy: authenticatingUserID,
@@ -95,7 +95,7 @@ const createPaymentGateway = async (request, response) => {
 	}
 };
 
-const updatePaymentGateway = async (request, response) => {
+const updateOrganization = async (request, response) => {
 	try {
 		const payload = request.body;
 		const { userID: authenticatingUserID } = request.jwtPayload;
@@ -105,7 +105,7 @@ const updatePaymentGateway = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbPayload = await PaymentGateways.findOne({ _id: payload._id });
+		const dbPayload = await Organizations.findOne({ _id: payload._id });
 
 		if (files.length) {
 			let file = files[0];
@@ -127,7 +127,7 @@ const updatePaymentGateway = async (request, response) => {
 			payload.media = { mimetype: file.mimetype, filename: generatedFileName };
 		}
 
-		const updatedPayload = await PaymentGateways.findOneAndUpdate(
+		const updatedPayload = await Organizations.findOneAndUpdate(
 			{ _id: payload._id },
 			{ $set: { ...payload, updatedBy: authenticatingUserID } },
 			{ new: true },
@@ -143,7 +143,7 @@ const updatePaymentGateway = async (request, response) => {
 	}
 };
 
-const deletePaymentGateway = async (request, response) => {
+const deleteOrganization = async (request, response) => {
 	try {
 		const { _id: itemID } = request.query;
 
@@ -151,7 +151,7 @@ const deletePaymentGateway = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const deletedPayload = await PaymentGateways.findOneAndDelete({ _id: itemID }, { new: true });
+		const deletedPayload = await Organizations.findOneAndDelete({ _id: itemID }, { new: true });
 
 		if (deletedPayload) {
 			if (deletedPayload?.media?.filename) {
@@ -171,9 +171,9 @@ const deletePaymentGateway = async (request, response) => {
 };
 
 module.exports = {
-	getPaymentGateways,
-	getPaymentGatewayImage,
-	createPaymentGateway,
-	updatePaymentGateway,
-	deletePaymentGateway,
+	getOrganizations,
+	getOrganizationImage,
+	createOrganization,
+	updateOrganization,
+	deleteOrganization,
 };

@@ -12,6 +12,6 @@ router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddlewa
 router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updateProject);
 router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteProject);
 
-router.get("/image", getProjectImage);
+router.get("/media", getProjectImage);
 
 module.exports = router;

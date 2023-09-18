@@ -13,7 +13,7 @@ const productSchema = mongoose.Schema(
 		],
 		partners: [{ type: mongoose.Schema.Types.ObjectId, ref: "Partners" }],
 		projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }],
-		categoryID: { type: mongoose.Schema.Types.ObjectId, ref: "Categories" },
+		category: { type: mongoose.Schema.Types.ObjectId, ref: "Categories" },
 		isActive: { type: Boolean, default: true },
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

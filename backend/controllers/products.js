@@ -64,7 +64,7 @@ const createProduct = async (request, response) => {
 		const { userID: authenticatingUserID } = request.jwtPayload;
 		const files = request.files;
 
-		if (!files.length || !payload?.title || !payload?.price || !payload?.categoryID) {
+		if (!files.length || !payload?.title || !payload?.price || !payload?.category) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 

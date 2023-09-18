@@ -25,7 +25,7 @@ router.delete("/", jwtAuthentication, userAuthorization(["admin", "user", "photo
 router.post("/password", jwtAuthentication, userAuthorization(["admin", "user", "photographer"]), updatePassword);
 router.patch("/password", passwordResetUsingVerificationEmail);
 
-router.get("/image", getUserImage);
+router.get("/media", getUserImage);
 router.post("/login", login);
 router.post("/send-password-reset-email", sendPasswordResetEmail);
 

@@ -18,6 +18,6 @@ router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddlewa
 router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updateCategory);
 router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteCategory);
 
-router.get("/image", getCategoryImage);
+router.get("/media", getCategoryImage);
 
 module.exports = router;

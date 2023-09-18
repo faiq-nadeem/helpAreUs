@@ -32,6 +32,7 @@ app.use("/v1/categories", require("./routes/categories.js"));
 app.use("/v1/guests", require("./routes/guests.js"));
 app.use("/v1/migrations", require("./routes/migrations.js"));
 app.use("/v1/orders", require("./routes/orders.js"));
+app.use("/v1/organizations", require("./routes/organizations.js"));
 app.use("/v1/partners", require("./routes/partners.js"));
 app.use("/v1/payment-gateways", require("./routes/paymentGateways.js"));
 app.use("/v1/projects", require("./routes/projects.js"));

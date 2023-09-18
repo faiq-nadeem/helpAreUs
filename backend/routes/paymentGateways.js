@@ -7,13 +7,17 @@ const {
 	createPaymentGateway,
 	updatePaymentGateway,
 	deletePaymentGateway,
+	getPaymentGatewayImage,
 } = require("../controllers/paymentGateways.js");
+const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
 
 const router = express.Router();
 
 router.get("/", getPaymentGateways);
-router.post("/", jwtAuthentication, userAuthorization(["admin"]), createPaymentGateway);
-router.put("/", jwtAuthentication, userAuthorization(["admin"]), updatePaymentGateway);
+router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), createPaymentGateway);
+router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updatePaymentGateway);
 router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deletePaymentGateway);
+
+router.get("/media", getPaymentGatewayImage);
 
 module.exports = router;
