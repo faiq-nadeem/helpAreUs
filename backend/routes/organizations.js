@@ -6,7 +6,6 @@ const {
 	updateOrganization,
 	deleteOrganization,
 	getOrganizations,
-	getOrganizationImage,
 } = require("../controllers/organizations.js");
 const { userAuthorization } = require("../middlewares/authentications/userAuthorization.js");
 const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
@@ -17,7 +16,5 @@ router.get("/", getOrganizations);
 router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), createOrganization);
 router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updateOrganization);
 router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteOrganization);
-
-router.get("/media", getOrganizationImage);
 
 module.exports = router;

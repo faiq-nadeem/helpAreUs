@@ -24,17 +24,3 @@ global.EXPRESS_RATE_LIMIT = {
 };
 
 global.USER_FIELDS_UPDATE_BY_ADMIN_ONLY = ["passwordReset", "userRole", "isActive", "createdBy", "updatedBy"];
-
-global.GUESTS_PRODUCTS_IGNORED_FIELDS = {
-	isActive: 0,
-	createdBy: 0,
-	updatedBy: 0,
-};
-
-global.GUESTS_GENERAL_IGNORED_FIELDS = {
-	isActive: 0,
-	createdBy: 0,
-	updatedBy: 0,
-	createdAt: 0,
-	updatedAt: 0,
-};

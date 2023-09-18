@@ -10,7 +10,6 @@ const {
 	sendPasswordResetEmail,
 	passwordResetUsingVerificationEmail,
 	deleteUser,
-	getUserImage,
 } = require("../controllers/users.js");
 const { userAuthorization } = require("../middlewares/authentications/userAuthorization.js");
 const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
@@ -25,7 +24,6 @@ router.delete("/", jwtAuthentication, userAuthorization(["admin", "user", "photo
 router.post("/password", jwtAuthentication, userAuthorization(["admin", "user", "photographer"]), updatePassword);
 router.patch("/password", passwordResetUsingVerificationEmail);
 
-router.get("/media", getUserImage);
 router.post("/login", login);
 router.post("/send-password-reset-email", sendPasswordResetEmail);
 

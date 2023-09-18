@@ -1,11 +1,9 @@
 const Categories = require("../models/categories.js");
 const path = require("path");
 const fs = require("fs");
-const sharp = require("sharp");
 const { sendJsonResponse, convertImageToWebp, generateUniqueFileName } = require("../utils/helpers.js");
 
-const placeholderImage = path.join(__dirname, "../assets/images/placeholder.webp");
-const filePath = path.join(__dirname, "../assets/images/categories");
+const filePath = path.join(__dirname, "../assets/images");
 
 const getCategories = async (request, response) => {
 	try {
@@ -24,31 +22,6 @@ const getCategories = async (request, response) => {
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
 		}
-	} catch (error) {
-		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
-	}
-};
-
-const getCategoryImage = async (request, response) => {
-	try {
-		const { filename, width, mimetype } = request.query;
-
-		if (!filename || !mimetype) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
-		}
-
-		const fileFullPath = path.join(filePath, filename);
-		const isFileExists = fs.existsSync(fileFullPath);
-
-		const sourceFile = fs.readFileSync(isFileExists ? fileFullPath : placeholderImage);
-		const optimizedImage =
-			mimetype.startsWith("image") && width ? await sharp(sourceFile).resize(parseInt(width)).toBuffer() : sourceFile;
-
-		response.writeHead(200, {
-			"Content-Type": mimetype,
-		});
-
-		response.end(optimizedImage);
 	} catch (error) {
 		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
 	}
@@ -170,10 +143,4 @@ const deleteCategory = async (request, response) => {
 	}
 };
 
-module.exports = {
-	getCategories,
-	getCategoryImage,
-	createCategory,
-	updateCategory,
-	deleteCategory,
-};
+module.exports = { getCategories, createCategory, updateCategory, deleteCategory };

@@ -11,13 +11,11 @@ const {
 	convertImageToWebp,
 	generateUniqueFileName,
 } = require("../utils/helpers.js");
-const sharp = require("sharp");
 
 var privateKEY = fs.readFileSync(path.join(__dirname, "../assets/encryptionKeys/privateKey.key"), "utf8");
 var publicKEY = fs.readFileSync(path.join(__dirname, "../assets/encryptionKeys/publicKey.key"), "utf8");
 
-const placeholderImage = path.join(__dirname, "../assets/images/placeholder.webp");
-const filePath = path.join(__dirname, "../assets/images/users");
+const filePath = path.join(__dirname, "../assets/images");
 
 const getUser = async (request, response) => {
 	let query = {};
@@ -50,31 +48,6 @@ const getUser = async (request, response) => {
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.UNAUTHORIZED, false, "Access denied!", null);
 		}
-	} catch (error) {
-		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
-	}
-};
-
-const getUserImage = async (request, response) => {
-	try {
-		const { filename, width, mimetype } = request.query;
-
-		if (!filename || !mimetype) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
-		}
-
-		const fileFullPath = path.join(filePath, filename);
-		const isFileExists = fs.existsSync(fileFullPath);
-
-		const sourceFile = fs.readFileSync(isFileExists ? fileFullPath : placeholderImage);
-		const optimizedImage =
-			mimetype.startsWith("image") && width ? await sharp(sourceFile).resize(parseInt(width)).toBuffer() : sourceFile;
-
-		response.writeHead(200, {
-			"Content-Type": mimetype,
-		});
-
-		response.end(optimizedImage);
 	} catch (error) {
 		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
 	}
@@ -428,7 +401,6 @@ const deleteUser = async (request, response) => {
 
 module.exports = {
 	getUser,
-	getUserImage,
 	login,
 	register,
 	updateUser,
