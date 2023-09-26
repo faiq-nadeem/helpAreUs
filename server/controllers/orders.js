@@ -25,17 +25,17 @@ const getOrders = async (request, response) => {
 
 const createOrder = async (request, response) => {
 	try {
-		const payload = request.body;
-		const { userID: authenticatingUserID } = request?.jwtPayload;
+		const payload = request.body || {};
+		const { userID: authenticatingUserID } = request?.jwtPayload || {};
 
-		if (!payload.orderID) {
+		if (!payload?.orderID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
 		const dbNewRecordObject = new Orders({
 			...payload,
-			// createdBy: authenticatingUserID,
-			// updatedBy: authenticatingUserID,
+			createdBy: authenticatingUserID,
+			updatedBy: authenticatingUserID,
 		});
 
 		const createdPayload = await dbNewRecordObject.save();

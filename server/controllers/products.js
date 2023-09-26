@@ -1,26 +1,43 @@
 const products = require("../models/products.js");
 const path = require("path");
 const fs = require("fs");
-const { sendJsonResponse, convertImageToWebp, generateUniqueFileName } = require("../utils/helpers.js");
+const { sendJsonResponse, convertImageToWebp, generateUniqueFileName, SortArrayByObjectField } = require("../utils/helpers.js");
 const users = require("../models/users.js");
+const ProductReviews = require("../models/productReviews.js");
 
 const filePath = path.join(__dirname, "../assets/images");
 
 const getProducts = async (request, response) => {
-	try {
-		const { _id: productID, page, limit } = request.query;
+	let query = {};
 
-		if (!productID && (!page || !limit)) {
+	try {
+		const payload = request.query;
+
+		if (!payload?._id && (!payload?.page || !payload?.limit)) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const dbProducts = await products
-			.find(productID ? { _id: productID } : {})
-			.limit(limit)
-			.skip(page && (page - 1) * limit);
+		if (payload?._id) query._id = payload._id;
+		if (payload?.isFeatured) query.isFeatured = payload.isFeatured;
+		if (payload?.category) query.category = payload.category;
+		if (payload?.isActive) query.isActive = payload.isActive;
+		if (payload?.minPrice && payload?.maxPrice) {
+			query.price = { $gte: payload.minPrice, $lte: payload.maxPrice };
+		} else if (payload?.minPrice) {
+			query.price = { $gte: payload.minPrice };
+		} else if (payload?.maxPrice) {
+			query.price = { $lte: payload.maxPrice };
+		}
 
-		if (dbProducts.length > 0) {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", productID ? dbProducts[0] : dbProducts);
+		const dbPayload = await products
+			.find(query)
+			.limit(payload?.limit)
+			.skip(payload?.page && (payload?.page - 1) * payload?.limit);
+
+		if (payload?.sortField) dbPayload.sort(SortArrayByObjectField(payload.sortField, payload?.sortReverse || false, null));
+
+		if (dbPayload.length > 0) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", payload?._id ? dbPayload[0] : dbPayload);
 		} else {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
 		}
@@ -175,4 +192,115 @@ const deleteProduct = async (request, response) => {
 	}
 };
 
-module.exports = { getProducts, createProduct, updateProduct, deleteProduct };
+const getProductReviews = async (request, response) => {
+	let query = {};
+
+	try {
+		const payload = request.query;
+
+		if (!payload?._id && (!payload?.page || !payload?.limit)) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
+		}
+
+		if (payload?._id) query._id = payload._id;
+		if (payload?.product) query.product = payload.product;
+		if (payload?.reviewer) query.reviewer = payload.reviewer;
+		if (payload?.rating) query.rating = payload.rating;
+		if (payload?.isApproved) query.isApproved = payload.isApproved;
+
+		const dbPayload = await ProductReviews.find(query)
+			.limit(payload?.limit)
+			.skip(payload?.page && (payload?.page - 1) * payload?.limit);
+
+		if (dbPayload.length > 0) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record Found!", payload?._id ? dbPayload[0] : dbPayload);
+		} else {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.NOTFOUND, false, "Record not Found!", null);
+		}
+	} catch (error) {
+		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
+	}
+};
+
+const createProductReview = async (request, response) => {
+	try {
+		const payload = request.body || {};
+		const { userID: authenticatingUserID } = request?.jwtPayload || {};
+
+		if (!payload?.reviewer || !payload?.rating) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
+		}
+
+		const dbNewRecordObject = new ProductReviews({
+			...payload,
+			createdBy: authenticatingUserID,
+			updatedBy: authenticatingUserID,
+		});
+
+		const createdPayload = await dbNewRecordObject.save();
+
+		if (createdPayload) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record created::success", createdPayload);
+		} else {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record created::failure", null);
+		}
+	} catch (error) {
+		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
+	}
+};
+
+const updateProductReview = async (request, response) => {
+	try {
+		const payload = request.body;
+		const { userID: authenticatingUserID } = request.jwtPayload;
+
+		if (!payload._id) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
+		}
+
+		const updatedPayload = await ProductReviews.findOneAndUpdate(
+			{ _id: payload._id },
+			{ $set: { ...payload, updatedBy: authenticatingUserID } },
+			{ new: true },
+		);
+
+		if (updatedPayload) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record updated::success", updatedPayload);
+		} else {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record updated::failure", null);
+		}
+	} catch (error) {
+		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
+	}
+};
+
+const deleteProductReview = async (request, response) => {
+	try {
+		const { _id: itemID } = request.query;
+
+		if (!itemID) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
+		}
+
+		const deletedPayload = await ProductReviews.findOneAndDelete({ _id: itemID }, { new: true });
+
+		if (deletedPayload) {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedPayload);
+		} else {
+			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
+		}
+	} catch (error) {
+		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
+	}
+};
+
+module.exports = {
+	getProducts,
+	createProduct,
+	updateProduct,
+	deleteProduct,
+	getProductReviews,
+	createProductReview,
+	updateProductReview,
+	deleteProductReview,
+};

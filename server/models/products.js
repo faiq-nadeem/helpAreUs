@@ -11,6 +11,8 @@ const productSchema = mongoose.Schema(
 				mimetype: String,
 			},
 		],
+		stock: { quantity: { type: Number, default: 0 } },
+		isFeatured: { type: Boolean, default: false },
 		partners: [{ type: mongoose.Schema.Types.ObjectId, ref: "Partners" }],
 		projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }],
 		category: { type: mongoose.Schema.Types.ObjectId, ref: "Categories" },
@@ -18,9 +20,7 @@ const productSchema = mongoose.Schema(
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 	},
-	{
-		timestamps: true,
-	},
+	{ timestamps: true },
 );
 
 module.exports = mongoose.model("Products", productSchema);

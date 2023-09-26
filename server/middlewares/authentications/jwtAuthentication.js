@@ -27,7 +27,7 @@ exports.jwtAuthentication = async (request, response, next) => {
 								HTTP_STATUS_CODES.INVALID_TOKEN,
 								false,
 								"Invalid Authentication Token!",
-								error
+								error,
 							);
 							break;
 						default:
@@ -36,7 +36,7 @@ exports.jwtAuthentication = async (request, response, next) => {
 								HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
 								false,
 								"Token cannot be processed",
-								error
+								error,
 							);
 							break;
 					}

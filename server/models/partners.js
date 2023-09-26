@@ -15,9 +15,7 @@ const partnerSchema = mongoose.Schema(
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 	},
-	{
-		timestamps: true,
-	},
+	{ timestamps: true },
 );
 
 module.exports = mongoose.model("Partners", partnerSchema);

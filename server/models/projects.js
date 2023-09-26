@@ -14,9 +14,7 @@ const subscriptionSchema = mongoose.Schema(
 		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
 		updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
 	},
-	{
-		timestamps: true,
-	},
+	{ timestamps: true },
 );
 
 module.exports = mongoose.model("subscriptions", subscriptionSchema);
