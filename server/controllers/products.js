@@ -163,7 +163,7 @@ const deleteProduct = async (request, response) => {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const deletedPayload = await ProductReviews.findOneAndDelete({ _id: itemID }, { new: true });
+		const deletedPayload = await products.findOneAndDelete({ _id: itemID }, { new: true });
 
 		if (deletedPayload) {
 			for (let media of deletedPayload.media) {
