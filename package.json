@@ -1,10 +1,10 @@
 {
 	"name": "picfan",
 	"version": "1.0.0",
-	"description": "Central manager for admin, backend, and website project",
+	"description": "Central manager for admin, server, and website project",
 	"scripts": {
-		"allnpmi": "cd website && npm i -f && cd ../admin && npm i -f && cd ../backend && npm i -f",
-		"allnpmdev": "cd website && npm run dev & cd ../admin && npm run dev & cd ../backend && npm run dev",
+		"allnpmi": "cd website && npm i -f && cd ../admin && npm i -f && cd ../server && npm i -f",
+		"allnpmdev": "cd website && npm run dev & cd ../admin && npm run dev & cd ../server && npm run dev",
 		"allnpmbuild": "cd website && npm run build && cd ../admin && npm run build && cd .."
 	},
 	"repository": {
