@@ -17,9 +17,9 @@ const multerMiddleware = require("../middlewares/storage/multerMiddleware.js");
 const router = express.Router();
 
 router.get("/", getProducts);
-router.post("/", jwtAuthentication, userAuthorization(["admin", "user"]), multerMiddleware(), createProduct);
-router.put("/", jwtAuthentication, userAuthorization(["admin", "user"]), multerMiddleware(), updateProduct);
-router.delete("/", jwtAuthentication, userAuthorization(["admin", "user"]), deleteProduct);
+router.post("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), createProduct);
+router.put("/", jwtAuthentication, userAuthorization(["admin"]), multerMiddleware(), updateProduct);
+router.delete("/", jwtAuthentication, userAuthorization(["admin"]), deleteProduct);
 
 router.get("/reviews", getProductReviews);
 router.post("/reviews", jwtAuthentication, userAuthorization(["admin", "user"]), createProductReview);

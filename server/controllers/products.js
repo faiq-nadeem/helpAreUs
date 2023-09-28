@@ -157,35 +157,25 @@ const updateProduct = async (request, response) => {
 
 const deleteProduct = async (request, response) => {
 	try {
-		const { _id: productID } = request.query;
-		const { userID: authenticatingUserID } = request.jwtPayload;
+		const { _id: itemID } = request.query;
 
-		if (!productID) {
+		if (!itemID) {
 			return sendJsonResponse(response, HTTP_STATUS_CODES.BAD_REQUEST, false, "Missing parameters!", null);
 		}
 
-		const authenticatingDBUser = await users.findOne({ _id: authenticatingUserID });
-		const dbProduct = await products.findOne({ _id: productID });
+		const deletedPayload = await ProductReviews.findOneAndDelete({ _id: itemID }, { new: true });
 
-		if (dbProduct.sellerID.toString() === authenticatingUserID || authenticatingDBUser.userRole === "admin") {
-			const deletedProduct = await products.findOneAndDelete({ _id: productID }, { new: true });
+		if (deletedPayload) {
+			for (let media of deletedPayload.media) {
+				const existingFilePath = path.join(filePath, media.filename);
+				const isThereExistingFile = fs.existsSync(existingFilePath);
 
-			if (deletedProduct) {
-				if (deletedProduct?.media?.length) {
-					for (let media of deletedProduct.media) {
-						const existingFilePath = path.join(filePath, media.filename);
-						const isThereExistingFile = fs.existsSync(existingFilePath);
-
-						if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
-					}
-				}
-
-				return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedProduct);
-			} else {
-				return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
+				if (isThereExistingFile) await fs.promises.unlink(existingFilePath);
 			}
+
+			return sendJsonResponse(response, HTTP_STATUS_CODES.OK, true, "Record delete::success", deletedPayload);
 		} else {
-			return sendJsonResponse(response, HTTP_STATUS_CODES.UNAUTHORIZED, false, "Permission denied!", null);
+			return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Record delete::failure", null);
 		}
 	} catch (error) {
 		return sendJsonResponse(response, HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR, false, "Error!", error);
